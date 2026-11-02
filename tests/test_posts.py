@@ -1,20 +1,28 @@
 import pytest
-import requests 
-import conftest
+
 
 @pytest.mark.smoke
-def get_post_test(int: id):
-    r = requests.get(conftest.base_url() + "/posts/" + id)
-    json = r.json()
-    assert r.status_code == 200 and json["id"] == id
-
-def get_posts_test():
-    r = requests.post(conftest.base_url() + "/posts")
-    json = r.json()
+@pytest.mark.parametrize("post_id", [1, 2, 50, 100])
+def test_get_post(session, base_url, post_id):
+    r = session.get(f"{base_url}/posts/{post_id}")
     assert r.status_code == 200
-    assert r.json != {}
+    assert r.json()["id"] == post_id
 
-def post_posts_test(string: json_body):
-    r = requests.post(conftest.base_url() + "/posts", json=json_body)
-    json = r.json()
-    assert r.status_code == 201 and json["id"] == 1
+
+def test_get_posts(session, base_url):
+    r = session.get(f"{base_url}/posts")
+    assert r.status_code == 200
+    assert len(r.json()) > 0
+
+
+def test_create_post(session, base_url):
+    payload = {"title": "hello", "body": "world", "userId": 1}
+    r = session.post(f"{base_url}/posts", json=payload)
+    assert r.status_code == 201
+    assert r.json()["title"] == payload["title"]
+
+
+@pytest.mark.negative
+def test_get_missing_post_returns_404(session, base_url):
+    r = session.get(f"{base_url}/posts/99999")
+    assert r.status_code == 404
