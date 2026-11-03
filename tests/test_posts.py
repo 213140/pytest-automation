@@ -26,3 +26,10 @@ def test_create_post(session, base_url):
 def test_get_missing_post_returns_404(session, base_url):
     r = session.get(f"{base_url}/posts/99999")
     assert r.status_code == 404
+
+
+def test_post_has_expected_fields(session, base_url):
+    post = session.get(f"{base_url}/posts/1").json()
+    expected = {"userId", "id", "title", "body"}
+    assert expected <= post.keys()
+    assert {k: post[k] for k in ("id", "userId")} == {"id": 1, "userId": 1}
